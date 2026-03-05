@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="app">
+    <header>
+      <div class="logo">INCOGNITO<span>+</span></div>
+      <button id="lock-btn">
+        <svg id="svg-lock" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </button>
+    </header>
+
+    <div id="lock-screen" class="view">
+      <div class="shield-icon">
+        <div class="shield-container">
+          <svg id="svg-shield" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#00ff9d"
+            stroke-width="1.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </div>
+      </div>
+      <h2>Vault Locked</h2>
+      <p>Use FaceID or PIN to access history</p>
+      <div id="controls">
+        <button id="unlock-trigger" class="btn-primary">Unlock Vault</button>
+        <button id="view-history" class="btn-outline">View History</button>
+        <button id="start-session" class="btn-primary">Start Ghost Session</button>
+        <button id="ghost-current" class="btn-outline">Ghost Current Tab</button>
+        <button id="stop-session" class="btn-danger">End All Sessions</button>
+      </div>
+    </div>
+
+    <div id="vault-screen" class="view hidden">
+      <div id="quota-warning" class="warning-banner hidden">
+        <span>Storage 90% full. Upgrade for unlimited cloud sync.</span>
+      </div>
+      <div class="search-bar">
+        <input type="text" placeholder="Search your ghost history...">
+      </div>
+      <ul id="history-list">
+      </ul>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+
+</html>

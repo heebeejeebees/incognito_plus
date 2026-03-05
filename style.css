@@ -1,0 +1,180 @@
+:root {
+  --bg: #0a0a0a;
+  --card: #161616;
+  --accent: #00ff9d;
+  /* Neon green for that 'secure' feel */
+  --text-main: #ffffff;
+  --text-dim: #888888;
+  --border: #2a2a2a;
+}
+
+body {
+  width: 350px;
+  height: 500px;
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text-main);
+  font-family:
+    "Inter",
+    -apple-system,
+    sans-serif;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+header {
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+.shield-container {
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 10px rgba(0, 255, 157, 0.2));
+}
+
+#lock-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 5px;
+}
+
+#lock-btn:hover {
+  color: var(--accent);
+}
+
+.view {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Lock Screen */
+#lock-screen {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.shield-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+#controls {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: black;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: transform 0.1s;
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
+.btn-danger {
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 5px;
+}
+/* Vault List */
+.search-bar input {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 10px;
+  border-radius: 6px;
+  color: white;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+}
+
+#history-list {
+  list-style: none;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.history-item {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.history-item:hover {
+  background: var(--card);
+}
+
+.history-item .title {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item .url {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.warning-banner {
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid #ff4d4d;
+  color: #ff4d4d;
+  padding: 8px;
+  font-size: 11px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  text-align: center;
+}

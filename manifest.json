@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Incognito+ MVP",
+  "version": "0.1",
+  "permissions": [
+    "history",
+    "storage",
+    "tabs",
+    "unlimitedStorage",
+    "identity"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
