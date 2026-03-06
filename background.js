@@ -93,37 +93,63 @@ chrome.history.onVisited.addListener(async (historyItem) => {
 });
 
 function updateIcon(active) {
-  // const path = active ? "icon-active.png" : "icon-idle.png";
-  // chrome.action.setIcon({ path: path });
+  if (active) {
+    chrome.action.setBadgeText({ text: "ON" });
+    chrome.action.setBadgeBackgroundColor({ color: "#00ff9d" });
+  } else {
+    chrome.action.setBadgeText({ text: "" });
+  }
 }
 
 // Banner injection for "Ghost Mode"
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  try {
-    if (changeInfo.status === "complete" && ghostWindowIds.has(tab.windowId)) {
-      chrome.scripting.insertCSS({
+  // Trigger on 'loading' so it appears before the user sees the content
+  if (
+    changeInfo.status === "loading" &&
+    ghostWindowIds.has(tab.windowId) &&
+    tab.url &&
+    !tab.url.startsWith("chrome://")
+  ) {
+    chrome.scripting
+      .executeScript({
         target: { tabId: tabId },
-        css: `
-        body::before {
-          content: "GHOST SESSION ACTIVE - HISTORY ENCRYPTED";
-          display: block;
-          width: 100%;
-          background: #00ff9d;
-          color: black;
-          text-align: center;
-          font-size: 10px;
-          font-weight: bold;
-          padding: 4px 0;
-          position: sticky;
-          top: 0;
-          z-index: 2147483647;
-          letter-spacing: 2px;
-        }
-      `,
-      });
-    }
-  } catch (e) {
-    console.error("Error injecting CSS for ghost banner", e);
+        func: () => {
+          if (document.getElementById("ghost-banner")) return;
+
+          const banner = document.createElement("div");
+          banner.id = "ghost-banner";
+          banner.innerHTML = `
+          <span>GHOST SESSION ACTIVE</span>
+          <button id="stop-ghost-btn">STOP SESSION</button>
+        `;
+
+          // Style the banner
+          Object.assign(banner.style, {
+            position: "fixed",
+            top: "0",
+            left: "0",
+            width: "100%",
+            background: "#00ff9d",
+            color: "black",
+            zIndex: "2147483647",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "4px 20px",
+            fontSize: "11px",
+            fontWeight: "bold",
+            fontFamily: "sans-serif",
+          });
+
+          document.body.prepend(banner);
+
+          // Send message to background to stop session
+          document.getElementById("stop-ghost-btn").onclick = () => {
+            chrome.runtime.sendMessage({ action: "STOP_GHOST_SESSION" });
+          };
+        },
+      })
+      .catch((err) => console.warn("Injection blocked on this page:", tab.url));
   }
 });
 

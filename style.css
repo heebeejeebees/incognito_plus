@@ -105,6 +105,14 @@ header {
 .btn-primary:active {
   transform: scale(0.95);
 }
+
+.btn-primary.active-session {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  cursor: default;
+}
+
 .btn-danger {
   background: #ff4d4d;
   color: white;
@@ -143,12 +151,17 @@ header {
   padding: 0;
   overflow-y: auto;
 }
-
 .history-item {
-  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
   border-bottom: 1px solid var(--border);
+}
+
+.history-content {
+  flex: 1;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
 .history-item:hover {
@@ -169,6 +182,29 @@ header {
   margin-top: 4px;
 }
 
+.delete-item-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 5px;
+}
+
+.delete-item-btn:hover {
+  color: #ff4d4d;
+}
+
+.btn-danger-sm {
+  width: 100%;
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid #ff4d4d;
+  color: #ff4d4d;
+  padding: 5px;
+  font-size: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
 .warning-banner {
   background: rgba(255, 77, 77, 0.1);
   border: 1px solid #ff4d4d;

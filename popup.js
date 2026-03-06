@@ -16,6 +16,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const lockScreen = document.getElementById("lock-screen");
     const list = document.getElementById("history-list");
     const lockBtn = document.getElementById("lock-btn");
+    const startSessionBtn = document.getElementById("start-session");
+    const ghostCurrentBtn = document.getElementById("ghost-current");
+    const stopSessionBtn = document.getElementById("stop-session");
 
     // Check if user has registered a PIN
     const { hashed_pin } = await chrome.storage.local.get("hashed_pin");
@@ -62,18 +65,62 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Render history
     async function renderHistory() {
-      const data = await chrome.storage.local.get({ ghostHistory: [] });
-      list.innerHTML = data.ghostHistory
-        .reverse()
-        .map(
-          (item) => `
-      <li class="history-item">
+      const { ghostHistory = [] } =
+        await chrome.storage.local.get("ghostHistory");
+      const list = document.getElementById("history-list");
+
+      // Add Clear All button if history exists
+      const clearAllHtml =
+        ghostHistory.length > 0
+          ? `<button id="clear-all" class="btn-danger-sm">Clear All History</button>`
+          : "";
+
+      list.innerHTML =
+        clearAllHtml +
+        ghostHistory
+          .reverse()
+          .map(
+            (item, index) => `
+    <li class="history-item" data-index="${ghostHistory.length - 1 - index}">
+      <div class="history-content" onclick="openInGhost('${item.url}')">
         <div class="title">${item.title || "No Title"}</div>
         <div class="url">${new URL(item.url).hostname}</div>
-      </li>
-    `,
-        )
-        .join("");
+      </div>
+      <button class="delete-item-btn" data-index="${ghostHistory.length - 1 - index}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
+    </li>
+  `,
+          )
+          .join("");
+
+      // Attach event listeners
+      document.querySelectorAll(".delete-item-btn").forEach((btn) => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          deleteHistoryItem(parseInt(btn.dataset.index));
+        };
+      });
+
+      if (document.getElementById("clear-all")) {
+        document.getElementById("clear-all").onclick = clearAllHistory;
+      }
+    }
+
+    async function deleteHistoryItem(index) {
+      let { ghostHistory } = await chrome.storage.local.get("ghostHistory");
+      ghostHistory.splice(index, 1);
+      await chrome.storage.local.set({ ghostHistory });
+      renderHistory();
+    }
+
+    async function clearAllHistory() {
+      if (confirm("Delete all ghost history?")) {
+        await chrome.storage.local.set({ ghostHistory: [] });
+        renderHistory();
+      }
     }
 
     // To ghost current tab
@@ -82,28 +129,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         active: true,
         currentWindow: true,
       });
-      if (!tab) return;
 
-      // 1. Tell background to handle the "Teleport"
-      chrome.runtime.sendMessage({
-        action: "GHOST_AND_MOVE",
-        url: tab.url,
-        tabId: tab.id,
-      });
+      if (tab && !tab.url.startsWith("chrome://")) {
+        chrome.runtime.sendMessage({
+          action: "GHOST_AND_MOVE",
+          url: tab.url,
+          tabId: tab.id,
+        });
+        window.close();
+      } else {
+        alert("Cannot ghost internal Chrome pages.");
+      }
     });
 
-    // To open history items in ghost
-    async function openInGhost(url) {
-      const windowList = Array.from(ghostWindowIds);
-      if (windowList.length > 0) {
-        chrome.tabs.create({ windowId: windowList[0], url: url });
-      } else {
-        // Start new ghost window with this URL
-        chrome.windows.create({ url: url, focused: true }, (win) => {
-          ghostWindowIds.add(win.id);
-        });
+    // START SESSION
+    startSessionBtn.addEventListener("click", () => {
+      chrome.runtime.sendMessage({ action: "START_GHOST_SESSION" });
+      window.close(); // Close popup so user sees the new window
+    });
+
+    // STOP SESSION
+    stopSessionBtn.addEventListener("click", () => {
+      if (confirm("This will close all active Ghost Windows. Proceed?")) {
+        chrome.runtime.sendMessage({ action: "STOP_GHOST_SESSION" });
+        // Update the UI immediately to show the 'Locked' state
+        updateUIState();
       }
-    }
+    });
 
     lockBtn.addEventListener("click", async () => {
       try {
@@ -141,6 +193,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
       </svg>
     `;
+          startSessionBtn.classList.add("active-session");
+          startSessionBtn.innerText = "Session Active";
+          startSessionBtn.disabled = true;
         } else {
           lockBtn.innerHTML = `
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -148,6 +203,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
       </svg>
     `;
+          startSessionBtn.classList.remove("active-session");
+          startSessionBtn.innerText = "Start Ghost Session";
+          startSessionBtn.disabled = false;
         }
       } catch (e) {
         console.error("Error updating UI state", e);
