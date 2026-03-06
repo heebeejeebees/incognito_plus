@@ -86,7 +86,7 @@ header {
 #controls {
   display: flex;
   flex-direction: column;
-  width: 300px;
+  align-items: center;
 }
 
 .btn-primary {
@@ -98,6 +98,7 @@ header {
   font-weight: 600;
   cursor: pointer;
   margin-top: 20px;
+  width: 200px;
   transition: transform 0.1s;
 }
 
@@ -108,22 +109,22 @@ header {
   background: #ff4d4d;
   color: white;
   border: none;
-  padding: 10px;
+  padding: 12px 24px;
   border-radius: 6px;
   cursor: pointer;
-  width: 100%;
   margin-top: 5px;
+  width: 200px;
 }
 
 .btn-outline {
   background: transparent;
   border: 1px solid var(--accent);
   color: var(--accent);
-  padding: 10px;
+  padding: 12px 24px;
   border-radius: 6px;
   cursor: pointer;
-  width: 100%;
   margin-top: 5px;
+  width: 200px;
 }
 /* Vault List */
 .search-bar input {
@@ -177,4 +178,28 @@ header {
   border-radius: 4px;
   margin-bottom: 10px;
   text-align: center;
+}
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+#vault-pin {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #00ff9d;
+  padding: 12px;
+  text-align: center;
+  font-size: 1.2rem;
+  letter-spacing: 4px;
+  border-radius: 8px;
+}
+
+#vault-pin:focus {
+  outline: none;
+  border-color: #00ff9d;
 }

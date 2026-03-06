@@ -27,15 +27,18 @@
           </svg>
         </div>
       </div>
-      <h2>Vault Locked</h2>
-      <p>Use FaceID or PIN to access history</p>
-      <div id="controls">
+      <h2 id="lock-title">Vault Locked</h2>
+
+      <div class="input-group">
+        <input type="password" id="vault-pin" placeholder="Enter PIN" maxlength="6">
         <button id="unlock-trigger" class="btn-primary">Unlock Vault</button>
-        <button id="view-history" class="btn-outline">View History</button>
-        <button id="start-session" class="btn-primary">Start Ghost Session</button>
-        <button id="ghost-current" class="btn-outline">Ghost Current Tab</button>
-        <button id="stop-session" class="btn-danger">End All Sessions</button>
       </div>
+    </div>
+
+    <div id="controls" class="hidden">
+      <button id="start-session" class="btn-primary">Start Ghost Session</button>
+      <button id="ghost-current" class="btn-outline">Ghost Current Tab</button>
+      <button id="stop-session" class="btn-danger">End All Sessions</button>
     </div>
 
     <div id="vault-screen" class="view hidden">
