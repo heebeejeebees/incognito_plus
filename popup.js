@@ -28,6 +28,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       unlockBtn.innerText = "Set PIN";
     }
 
+    // Trigger button click when 'Enter' is pressed in the input field
+    pinInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        // Prevent default form behavior if you wrap this in a <form> tag later
+        event.preventDefault();
+        unlockBtn.click();
+      }
+    });
+
+    // Auto-focus the input so the user can type immediately
+    pinInput.focus();
+
     // Click handler for both Registration and Login
     unlockBtn.addEventListener("click", async () => {
       const pin = pinInput.value;
@@ -65,28 +77,55 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Render history
     async function renderHistory() {
-      const { ghostHistory = [] } =
-        await chrome.storage.local.get("ghostHistory");
-      const list = document.getElementById("history-list");
+      if (!hashed_pin) {
+        window.location.reload(); // If no PIN, force reload to registration screen
+        return;
+      }
+      try {
+        const decryptedHistory = await loadAndDecryptHistory(hashed_pin);
+        renderList(decryptedHistory);
+      } catch (e) {
+        console.error("Decryption failed. Wrong PIN?", e);
+        alert("Could not unlock vault. Please check your PIN.");
+      }
+    }
 
+    async function loadAndDecryptHistory(pin) {
+      const { ghostHistory } = await chrome.storage.local.get("ghostHistory");
+
+      if (!ghostHistory || !ghostHistory.ciphertext) {
+        console.log("Vault is empty.");
+        return [];
+      }
+
+      try {
+        // Decrypt the entire array in one operation
+        const decryptedArray = await decryptData(ghostHistory, pin);
+        return decryptedArray;
+      } catch (e) {
+        throw new Error("Invalid PIN or corrupted data");
+      }
+    }
+
+    async function renderList(history) {
       // Add Clear All button if history exists
       const clearAllHtml =
-        ghostHistory.length > 0
+        history.length > 0
           ? `<button id="clear-all" class="btn-danger-sm">Clear All History</button>`
           : "";
 
       list.innerHTML =
         clearAllHtml +
-        ghostHistory
+        history
           .reverse()
           .map(
             (item, index) => `
-    <li class="history-item" data-index="${ghostHistory.length - 1 - index}">
+    <li class="history-item" data-index="${history.length - 1 - index}">
       <div class="history-content" onclick="openInGhost('${item.url}')">
         <div class="title">${item.title || "No Title"}</div>
         <div class="url">${new URL(item.url).hostname}</div>
       </div>
-      <button class="delete-item-btn" data-index="${ghostHistory.length - 1 - index}">
+      <button class="delete-item-btn" data-index="${history.length - 1 - index}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
         </svg>
@@ -154,27 +193,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         chrome.runtime.sendMessage({ action: "STOP_GHOST_SESSION" });
         // Update the UI immediately to show the 'Locked' state
         updateUIState();
-      }
-    });
-
-    lockBtn.addEventListener("click", async () => {
-      try {
-        // Check our background script to see if a session is live
-        const response = await chrome.runtime.sendMessage({
-          action: "GET_SESSION_STATUS",
-        });
-
-        if (response.isActive) {
-          lockBtn.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00ff9d" stroke-width="2">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-        <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
-      </svg>
-    `;
-          chrome.runtime.sendMessage({ action: "STOP_GHOST_SESSION" });
-        }
-      } catch (e) {
-        console.error("Error updating UI state", e);
       }
     });
 

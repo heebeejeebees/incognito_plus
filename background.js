@@ -1,4 +1,7 @@
+importScripts("crypto.js");
+
 let ghostWindowIds = new Set();
+const MAX_HISTORY_ITEMS = 5000; // Adjust based on your performance preference
 
 // Start or Stop Session: Open a new window and track it
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -20,7 +23,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           });
         });
         ghostWindowIds.clear();
+
+        // Clean up UI
         updateIcon(false);
+        chrome.action.setBadgeText({ text: "" });
+        // Reload the tab that clicked stop to remove the banner
+        if (sender.tab) {
+          chrome.tabs.reload(sender.tab.id);
+        }
         break;
 
       case "GHOST_AND_MOVE":
@@ -65,27 +75,11 @@ chrome.history.onVisited.addListener(async (historyItem) => {
 
     // The Conditional Ghost: Only delete if it's in a tracked window
     if (activeTab && ghostWindowIds.has(activeTab.windowId)) {
-      // Save to private vault
-      const data = await chrome.storage.local.get({ ghostHistory: [] });
-      await chrome.storage.local.set({
-        ghostHistory: [
-          ...data.ghostHistory,
-          { ...historyItem, time: Date.now() },
-        ],
-      });
+      // Use our new FIFO-aware save function
+      await saveToGhostHistory(historyItem);
 
-      // Delete from Global History
+      // Wipe from native history
       chrome.history.deleteUrl({ url: historyItem.url });
-
-      // Storage Quota Warning
-      const bytesUsed = await chrome.storage.sync.getBytesInUse();
-      const QUOTA = chrome.storage.sync.QUOTA_BYTES; // usually 102,400
-
-      if (bytesUsed > QUOTA * 0.9) {
-        // Trigger a notification or flag for the popup
-        chrome.action.setBadgeText({ text: "FULL" });
-        chrome.action.setBadgeBackgroundColor({ color: "#ff4d4d" });
-      }
     }
   } catch (e) {
     console.error("Error processing visited history item", e);
@@ -178,3 +172,47 @@ chrome.windows.onRemoved.addListener((windowId) => {
     }
   }
 });
+
+async function saveToGhostHistory(historyItem) {
+  try {
+    const { hashed_pin } = await chrome.storage.local.get("hashed_pin");
+    if (!hashed_pin) {
+      console.warn("No PIN set. Skipping history save.");
+      return;
+    }
+
+    const data = await chrome.storage.local.get({ ghostHistory: [] });
+    let updatedHistory = [
+      ...data.ghostHistory,
+      { ...historyItem, time: Date.now() },
+    ];
+
+    // FIFO Logic: If we exceed the limit, remove the oldest entries
+    if (updatedHistory.length > MAX_HISTORY_ITEMS) {
+      const overflow = updatedHistory.length - MAX_HISTORY_ITEMS;
+      updatedHistory = updatedHistory.slice(overflow);
+      console.log(`FIFO: Pruned ${overflow} oldest items from vault.`);
+    }
+
+    const encryptedData = await encryptData(updatedHistory, hashed_pin);
+
+    await chrome.storage.local.set({ ghostHistory: encryptedData });
+
+    // Check quota for the 'sync' UI (if you're still using it for the warning banner)
+    checkStorageQuota();
+  } catch (e) {
+    console.error("Error in FIFO saving logic", e);
+  }
+}
+
+async function checkStorageQuota() {
+  const bytesUsed = await chrome.storage.local.getBytesInUse();
+  // With unlimitedStorage, this is mostly for the UI warning
+  // 50MB is a safe "soft limit" to warn users
+  const SOFT_LIMIT = 50 * 1024 * 1024;
+
+  if (bytesUsed > SOFT_LIMIT) {
+    chrome.action.setBadgeText({ text: "!" });
+    chrome.action.setBadgeBackgroundColor({ color: "#ff4d4d" });
+  }
+}
