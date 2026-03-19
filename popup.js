@@ -232,4 +232,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (err) {
     console.error("Error initializing popup", err);
   }
+
+  resetPinBtn.addEventListener("click", async () => {
+    // TODO do HTML first
+  });
+
+  // Reset pin
+  async function changePin(oldPin, newPin) {
+    try {
+      // 1. Decrypt with old PIN
+      const { ghostHistory } = await chrome.storage.local.get("ghostHistory");
+      const decryptedData = await decryptData(ghostHistory, oldPin);
+
+      // 2. Re-encrypt with new PIN
+      const newEncryptedBlob = await encryptData(decryptedData, newPin);
+      const newHashedPin = await hashPin(newPin);
+
+      // 3. Save new PIN and new Blob
+      await chrome.storage.local.set({
+        hashed_pin: newHashedPin,
+        ghostHistory: newEncryptedBlob,
+      });
+
+      alert("PIN updated and history migrated successfully!");
+    } catch (e) {
+      alert("Incorrect old PIN. Migration failed.");
+    }
+  }
 });

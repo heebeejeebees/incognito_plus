@@ -80,6 +80,18 @@ chrome.history.onVisited.addListener(async (historyItem) => {
 
       // Wipe from native history
       chrome.history.deleteUrl({ url: historyItem.url });
+
+      // Clear Cache and Cookies
+      chrome.browsingData.remove(
+        {
+          since: Date.now() - 60000, // Last 60 seconds
+        },
+        {
+          cache: true,
+          cookies: true,
+          formData: true,
+        },
+      );
     }
   } catch (e) {
     console.error("Error processing visited history item", e);
